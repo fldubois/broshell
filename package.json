@@ -1,0 +1,25 @@
+{
+  "name": "broshell",
+  "version": "0.0.0",
+  "description": "Remote shell inside a web browser",
+  "author": "Florent Dubois <florent.dubois@devaddict.io>",
+  "license": "MIT",
+  "keywords": [
+    "browser",
+    "shell",
+    "bash"
+  ],
+  "homepage": "https://github.com/fldubois/broshell",
+  "bugs": "https://github.com/fldubois/broshell/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fldubois/broshell.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.13.4",
+    "socket.io": "^1.4.5"
+  }
+}
