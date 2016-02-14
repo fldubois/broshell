@@ -13,6 +13,12 @@ var server = app.listen(8080, function () {
   console.log('BroShell listening at http://%s:%s', host, port);
 });
 
+var shasum = crypto.createHash('sha1');
+shasum.update('boundary-' + Math.random());
+var token = shasum.digest('hex');
+
+var boundary = ' echo "' + token + '"\n';
+
 // Socket.io server
 
 var io = require('socket.io')(server);
@@ -27,8 +33,15 @@ io.on('connection', function (socket) {
 
   bash.stdout.on('data', function (data) {
     data.toString().replace(/(\n)*$/, '').split('\n').forEach(function (line) {
-      console.log('[stdout]', line);
-      socket.emit('stdout', line);
+      if (line.indexOf(token) === 0) {
+        if (typeof cb === 'function') {
+          cb();
+          cb = null;
+        }
+      } else {
+        console.log('[stdout]', line);
+        socket.emit('stdout', line);
+      }
     });
   });
 
@@ -44,8 +57,10 @@ io.on('connection', function (socket) {
     socket.emit('close', code);
   });
 
-  socket.on('cmd', function (cmd) {
+  socket.on('cmd', function (cmd, callback) {
+    cb = callback;
     console.log('[cmd]', cmd.replace(/(\n)*$/, ''));
+    bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + boundary);
     // Execute the command
   });
 });
