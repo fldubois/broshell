@@ -17,7 +17,11 @@ var shasum = crypto.createHash('sha1');
 shasum.update('boundary-' + Math.random());
 var token = shasum.digest('hex');
 
-var boundary = ' echo "' + token + '"\n';
+var boundary = ' echo "' + token + JSON.stringify({
+  username: "`whoami`",
+  hostname: "`hostname`",
+  cwd: "`pwd`"
+}).replace(/"/g, '\\"') + '"\n';
 
 // Socket.io server
 
@@ -34,8 +38,12 @@ io.on('connection', function (socket) {
   bash.stdout.on('data', function (data) {
     data.toString().replace(/(\n)*$/, '').split('\n').forEach(function (line) {
       if (line.indexOf(token) === 0) {
+        var context = JSON.parse(line.replace(token, ''));
+        console.log('[context]', JSON.stringify(context));
+        socket.emit('context', context);
+
         if (typeof cb === 'function') {
-          cb();
+          cb(context);
           cb = null;
         }
       } else {
