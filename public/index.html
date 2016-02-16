@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+  </head>
+  <style>
+
+  html, body {
+    width: 100%;
+    margin: 0 3px;
+    background-color: rgb(39, 40, 34);
+    color: rgb(248, 248, 242);
+    font-family: 'Consolas';
+  }
+
+  .line.error {
+    color: rgb(231, 76, 60);
+  }
+
+  .hidden {
+    display: none;
+  }
+  </style>
+<body>
+  <div id="output"></div>
+  <div id="input" class="line hidden">
+    <span class="prompt">&gt;</span><span id="cmd"></span>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var output = document.querySelector('#output');
+    var input  = document.querySelector('#input');
+    var cmd    = document.querySelector('#cmd');
+
+    console.log('Connectng to ', window.location.host);
+    var socket = io.connect(window.location.host);
+
+    socket.on('stdout', function (line) {
+      var div = document.createElement('div');
+      div.classList.add('line');
+      div.innerHTML = line;
+
+      output.appendChild(div);
+    });
+
+    socket.on('stderr', function (line) {
+      var div = document.createElement('div');
+      div.classList.add('line');
+      div.classList.add('error');
+      div.innerHTML = line;
+
+      output.appendChild(div);
+    });
+
+    socket.on('context', function (ctx) {
+      input.classList.remove('hidden');
+    });
+
+    socket.on('exit', function (code) {
+      console.log('exit', code);
+    });
+
+    document.getElementsByTagName('body')[0].addEventListener('keypress', function (event) {
+      if (!input.classList.contains('hidden')) {
+        if (event.keyCode === 13) { // Enter
+          var command = cmd.innerHTML;
+
+          var div = document.createElement('div');
+          div.classList.add('line');
+          div.appendChild(input.firstChild.clone());
+          div.appendChild(document.createTextNode(command));
+
+          cmd.innerHTML = '';
+          input.classList.add('hidden');
+
+          output.appendChild(div);
+
+          socket.emit('cmd', command);
+        } else if (event.keyCode === 8) { // Backspace
+          if (cmd.innerHTML.length > 0) {
+            cmd.innerHTML = cmd.innerHTML.substring(0, cmd.innerHTML.length - 1);
+          }
+          event.preventDefault();
+        } else {
+          cmd.innerHTML = cmd.innerHTML + event.key;
+        }
+      }
+
+      event.stopPropagation();
+    }, false);
+  </script>
+</body>
+</html>
