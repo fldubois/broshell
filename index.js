@@ -23,6 +23,10 @@ var boundary = ' echo "' + token + JSON.stringify({
   cwd: "`pwd`"
 }).replace(/"/g, '\\"') + '"\n';
 
+var resetHistoryIndex = ' HISTINDEX=0;'
+
+var verbose = true;
+
 // Socket.io server
 
 var io = require('socket.io')(server);
@@ -31,7 +35,15 @@ io.on('connection', function (socket) {
   console.log('connection');
 
   var bash = spawn('/bin/bash', [], {
-    cwd: process.cwd()
+    cwd: process.cwd(),
+    env: {
+      HISTFILE: '/tmp/hst',
+      HISTFILESIZE: 500,
+      HISTSIZE: 500,
+      HISTCONTROL: 'ignorespace',
+      HISTINDEX: 0,
+      SHELLOPTS: 'history:histexpand'
+    }
   });
   var cb;
 
@@ -46,7 +58,9 @@ io.on('connection', function (socket) {
           cb(context);
           cb = null;
         }
-      } else {
+
+        verbose = true;
+      } else if (verbose) {
         console.log('[stdout]', line);
         socket.emit('stdout', line);
       }
@@ -70,5 +84,20 @@ io.on('connection', function (socket) {
     console.log('[cmd]', cmd.replace(/(\n)*$/, ''));
     bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + boundary);
     // Execute the command
+  });
+
+  socket.on('history', function (direction, callback) {
+    console.log('[history]', direction);
+    cb = callback;
+    verbose = false;
+
+    if (direction < 0) {
+      var histsize = '$(history | tail -n 1 | awk -F "[[:space:]]+" \'{print $2}\')';
+      var cmd = 'HISTINDEX=$((HISTINDEX-1>-' + histsize + '?$HISTINDEX-1:-' + histsize +'));'
+    } else {
+      var cmd = 'HISTINDEX=$((HISTINDEX+1<-1?$HISTINDEX+1:-1));'
+    }
+
+    bash.stdin.write(' ' + cmd + 'fc -l $HISTINDEX $HISTINDEX | sed -e "s/^[0-9]\\+\\t\\?\\s\\?//"\n' + boundary);
   });
 });
