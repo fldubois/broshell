@@ -2,9 +2,15 @@
 
 process.name = 'broshell';
 
+var crypto = require('crypto');
+var http   = require('http');
+var spawn  = require('child_process').spawn;
+
 var express = require('express');
 
 var app = express();
+
+app.use(express.static('public'));
 
 var server = app.listen(8080, function () {
   var host = server.address().address;
@@ -24,8 +30,6 @@ var boundary = ' echo "' + token + JSON.stringify({
 }).replace(/"/g, '\\"') + '"\n';
 
 var resetHistoryIndex = ' HISTINDEX=0;'
-
-var verbose = true;
 
 // Socket.io server
 
@@ -50,19 +54,21 @@ io.on('connection', function (socket) {
   bash.stdout.on('data', function (data) {
     data.toString().replace(/(\n)*$/, '').split('\n').forEach(function (line) {
       if (line.indexOf(token) === 0) {
-        var context = JSON.parse(line.replace(token, ''));
-        console.log('[context]', JSON.stringify(context));
-        socket.emit('context', context);
+        if (typeof cb === 'function') {
+          cb = null;
+        } else {
+          var context = JSON.parse(line.replace(token, ''));
+          console.log('[context]', JSON.stringify(context));
+          socket.emit('context', context);
+        }
+      } else {
+        console.log('[stdout]', line);
 
         if (typeof cb === 'function') {
-          cb(context);
-          cb = null;
+          cb(line);
+        } else {
+          socket.emit('stdout', line);
         }
-
-        verbose = true;
-      } else if (verbose) {
-        console.log('[stdout]', line);
-        socket.emit('stdout', line);
       }
     });
   });
@@ -79,17 +85,14 @@ io.on('connection', function (socket) {
     socket.emit('close', code);
   });
 
-  socket.on('cmd', function (cmd, callback) {
-    cb = callback;
+  socket.on('cmd', function (cmd) {
     console.log('[cmd]', cmd.replace(/(\n)*$/, ''));
-    bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + boundary);
-    // Execute the command
+    bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + resetHistoryIndex + boundary);
   });
 
   socket.on('history', function (direction, callback) {
     console.log('[history]', direction);
     cb = callback;
-    verbose = false;
 
     if (direction < 0) {
       var histsize = '$(history | tail -n 1 | awk -F "[[:space:]]+" \'{print $2}\')';
@@ -100,4 +103,6 @@ io.on('connection', function (socket) {
 
     bash.stdin.write(' ' + cmd + 'fc -l $HISTINDEX $HISTINDEX | sed -e "s/^[0-9]\\+\\t\\?\\s\\?//"\n' + boundary);
   });
+
+  bash.stdin.write(boundary);
 });
