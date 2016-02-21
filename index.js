@@ -7,12 +7,19 @@ var http   = require('http');
 var spawn  = require('child_process').spawn;
 
 var express = require('express');
+var options = require('commander');
+
+options.version(require('./package.json').version)
+  .option('-p, --port [port]', 'Listening port for client connection [8080]', 8080)
+  .option('-x, --bin [path]', 'Path to native shell binaries [/bin/bash]', '/bin/bash')
+  .option('-H, --history [path]', 'Path to history save file [~/.broshell_history]', '~/.broshell_history')
+  .parse(process.argv);
 
 var app = express();
 
 app.use(express.static('public'));
 
-var server = app.listen(8080, function () {
+var server = app.listen(options.port, function () {
   var host = server.address().address;
   var port = server.address().port;
 
@@ -38,10 +45,10 @@ var io = require('socket.io')(server);
 io.on('connection', function (socket) {
   console.log('connection');
 
-  var bash = spawn('/bin/bash', [], {
+  var bash = spawn(options.bin, [], {
     cwd: process.cwd(),
     env: {
-      HISTFILE: '/tmp/hst',
+      HISTFILE: options.history,
       HISTFILESIZE: 500,
       HISTSIZE: 500,
       HISTCONTROL: 'ignorespace',
