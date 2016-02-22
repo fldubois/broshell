@@ -38,6 +38,8 @@ var boundary = ' echo "' + token + JSON.stringify({
 
 var resetHistoryIndex = ' HISTINDEX=0;'
 
+options.history = options.history.replace('~', process.env.HOME)
+
 // Socket.io server
 
 var io = require('socket.io')(server);
