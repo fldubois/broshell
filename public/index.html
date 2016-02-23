@@ -86,6 +86,9 @@
       div.innerHTML = line;
 
       output.appendChild(div);
+
+      // Scroll to bottom
+      window.scrollTo(0, document.body.scrollHeight);
     });
 
     socket.on('stderr', function (line) {
@@ -95,19 +98,25 @@
       div.innerHTML = line;
 
       output.appendChild(div);
+
+      // Scroll to bottom
+      window.scrollTo(0, document.body.scrollHeight);
     });
 
     socket.on('context', function (ctx) {
       context = ctx;
       input.replaceChild(createPrompt(context), input.firstChild);
       input.classList.remove('hidden');
+
+      // Scroll to bottom
+      window.scrollTo(0, document.body.scrollHeight);
     });
 
     socket.on('exit', function (code) {
       console.log('exit', code);
     });
 
-    document.getElementsByTagName('body')[0].addEventListener('keypress', function (event) {
+    document.body.addEventListener('keypress', function (event) {
       if (!input.classList.contains('hidden')) {
         if (event.keyCode === 13) { // Enter
           var command = cmd.innerHTML;
@@ -140,6 +149,9 @@
           cmd.innerHTML = cmd.innerHTML + event.key;
         }
       }
+
+      // Scroll to bottom
+      window.scrollTo(0, document.body.scrollHeight);
 
       event.stopPropagation();
     }, false);
