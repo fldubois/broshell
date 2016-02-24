@@ -136,7 +136,6 @@
           if (cmd.innerHTML.length > 0) {
             cmd.innerHTML = cmd.innerHTML.substring(0, cmd.innerHTML.length - 1);
           }
-          event.preventDefault();
         } else if (event.keyCode === 38) { // Arrow Up
           socket.emit('history', -1, function (command) {
             cmd.innerHTML = command;
@@ -153,6 +152,7 @@
       // Scroll to bottom
       window.scrollTo(0, document.body.scrollHeight);
 
+      event.preventDefault();
       event.stopPropagation();
     }, false);
   </script>
