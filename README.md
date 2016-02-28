@@ -2,6 +2,11 @@
 
 > Remote shell inside a web browser
 
+## Warning
+
+This version is a pre-release, no security is currently implemented (authentification or connection encryption).
+Therefore you should not expose broshell access on public networks.
+
 ## Install
 
 1. Clone this repository
