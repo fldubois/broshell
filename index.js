@@ -12,7 +12,9 @@ var options = require('commander');
 options.version(require('./package.json').version)
   .option('-p, --port [port]', 'Listening port for client connection [8080]', 8080)
   .option('-x, --bin [path]', 'Path to native shell binaries [/bin/bash]', '/bin/bash')
-  .option('-H, --history [path]', 'Path to history save file [~/.broshell_history]', '~/.broshell_history')
+  .option('-H, --history [path]', 'Path to history save file [~/.broshell_history]', process.env.HOME + '/.broshell_history')
+  .option('-u, --uid [uid]', 'User identity of the bash process [node process uid]', process.getuid())
+  .option('-g, --gid [gid]', 'Group identity of the bash process [node process gid]', process.getgid())
   .parse(process.argv);
 
 var app = express();
@@ -36,9 +38,7 @@ var boundary = ' echo "' + token + JSON.stringify({
   cwd: "`pwd`"
 }).replace(/"/g, '\\"') + '"\n';
 
-var resetHistoryIndex = ' HISTINDEX=0;'
-
-options.history = options.history.replace('~', process.env.HOME)
+var resetHistoryIndex = ' HISTINDEX=0;';
 
 // Socket.io server
 
@@ -48,6 +48,8 @@ io.on('connection', function (socket) {
   console.log('connection');
 
   var bash = spawn(options.bin, [], {
+    uid: +options.uid,
+    gid: +options.gid,
     cwd: process.cwd(),
     env: {
       HISTFILE: options.history,

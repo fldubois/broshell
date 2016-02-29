@@ -34,3 +34,5 @@ Therefore you should not expose broshell access on public networks.
 | `-p`  | `--port`    | `8080`                | Listening port for client connection |
 | `-x`  | `--bin`     | `/bin/bash`           | Path to native shell binaries        |
 | `-H`  | `--history` | `~/.broshell_history` | Path to history save file            |
+| `-u`  | `--uid`     | `node process uid`    | User identity of the bash process    |
+| `-g`  | `--gid`     | `node process gid`    | Group identity of the bash process   |
