@@ -15,6 +15,7 @@ options.version(require('./package.json').version)
   .option('-H, --history [path]', 'Path to history save file [~/.broshell_history]', process.env.HOME + '/.broshell_history')
   .option('-u, --uid [uid]', 'User identity of the bash process [node process uid]', process.getuid())
   .option('-g, --gid [gid]', 'Group identity of the bash process [node process gid]', process.getgid())
+  .option('-p, --path [path]', 'Startup working directory [current directory]', process.cwd())
   .parse(process.argv);
 
 var app = express();
@@ -50,7 +51,7 @@ io.on('connection', function (socket) {
   var bash = spawn(options.bin, [], {
     uid: +options.uid,
     gid: +options.gid,
-    cwd: process.cwd(),
+    cwd: options.path,
     env: {
       HISTFILE: options.history,
       HISTFILESIZE: 500,
