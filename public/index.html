@@ -158,6 +158,11 @@
               cmd.left.textContent = cmd.left.textContent.substring(0, cmd.left.textContent.length - 1);
             }
             break;
+          case 46: // Delete
+            if (cmd.right.textContent.length > 0) {
+              cmd.right.textContent = cmd.right.textContent.substring(1, cmd.right.textContent.length);
+            }
+            break;
           case 38: // Arrow Up
             socket.emit('history', -1, function (command) {
               cmd.left.textContent = command;
