@@ -102,6 +102,11 @@ io.on('connection', function (socket) {
     bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + resetHistoryIndex + boundary);
   });
 
+  socket.on('interrupt', function () {
+    console.log('[interrupt]');
+    spawn('pkill', ['-P', bash.pid]);
+  });
+
   socket.on('history', function (direction, callback) {
     console.log('[history]', direction);
     cb = callback;

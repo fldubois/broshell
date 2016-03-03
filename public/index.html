@@ -195,6 +195,16 @@
 
         // Scroll to bottom
         window.scrollTo(0, document.body.scrollHeight);
+      } else {
+        if (event.ctrlKey && (event.charCode === 67 || event.charCode === 99)) { // CTRL+C
+          var div = document.createElement('div');
+          div.classList.add('line');
+          div.appendChild(document.createTextNode('^C'));
+
+          output.appendChild(div);
+
+          socket.emit('interrupt');
+        }
       }
 
       event.preventDefault();
