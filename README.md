@@ -25,7 +25,7 @@ Therefore you should not expose broshell access on public networks.
 
 2. Open a web browser and navigate to the broshell URL
 
-  `http://[broshell server IP]:8080`
+  `http://[broshell server IP]:[broshell port]`
 
 ### Command line arguments
 
@@ -36,3 +36,4 @@ Therefore you should not expose broshell access on public networks.
 | `-H`  | `--history` | `~/.broshell_history` | Path to history save file            |
 | `-u`  | `--uid`     | `node process uid`    | User identity of the bash process    |
 | `-g`  | `--gid`     | `node process gid`    | Group identity of the bash process   |
+| `-p`  | `--path`    | `current directory`   | Startup working directory            |

@@ -16,7 +16,9 @@
     "url": "https://github.com/fldubois/broshell.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "version": "sed -r \"/\\[Unreleased\\]\\[unreleased\\]/a \\\\\\n## [$npm_package_version][`date +%F`]\" -i CHANGELOG.md && git add CHANGELOG.md",
+    "postversion": "git push --follow-tags"
   },
   "dependencies": {
     "commander": "^2.9.0",
