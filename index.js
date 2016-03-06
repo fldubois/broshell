@@ -92,6 +92,12 @@ io.on('connection', function (socket) {
     });
   });
 
+  bash.stdin.on('error', function (err) {
+    if (err.code !== 'ECONNRESET') {
+      throw err;
+    }
+  });
+
   bash.on('close', function (code) {
     console.log('[close]', code);
     socket.emit('close', code);
