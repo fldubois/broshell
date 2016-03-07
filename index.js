@@ -127,5 +127,9 @@ io.on('connection', function (socket) {
     bash.stdin.write(' ' + cmd + 'fc -l $HISTINDEX $HISTINDEX | sed -e "s/^[0-9]\\+\\t\\?\\s\\?//"\n' + boundary);
   });
 
+  socket.on('disconnect', function () {
+    bash.stdin.write(' history -a\n');
+  });
+
   bash.stdin.write(boundary);
 });
