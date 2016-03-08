@@ -7,6 +7,16 @@
 This version is a pre-release, no security is currently implemented (authentification or connection encryption).
 Therefore you should not expose broshell access on public networks.
 
+## Native shell vs child processes
+
+The goal of this project is to reproduct the full experience of a native shell over the internet.
+
+At first glance, the most logical way to achive with node.js this is to spawn a process for each command.
+But this approach lack some useful features of a shell (i.e. environment variables, history, ...).
+Of course, these features could be rewrite in JavaScript, but it seems a bit like reinventing the wheel.
+
+Therefore, broshell is based on another solution: spawn a native shell and transfer interactions between the web client and the native shell.
+
 ## Install
 
 1. Clone this repository
