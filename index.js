@@ -8,6 +8,7 @@ var spawn  = require('child_process').spawn;
 
 var express = require('express');
 var options = require('commander');
+var logger  = require('winston');
 
 options.version(require('./package.json').version)
   .option('-p, --port [port]', 'Listening port for client connection [8080]', 8080)
@@ -15,18 +16,18 @@ options.version(require('./package.json').version)
   .option('-H, --history [path]', 'Path to history save file [~/.broshell_history]', process.env.HOME + '/.broshell_history')
   .option('-u, --uid [uid]', 'User identity of the bash process [node process uid]', process.getuid())
   .option('-g, --gid [gid]', 'Group identity of the bash process [node process gid]', process.getgid())
-  .option('-p, --path [path]', 'Startup working directory [current directory]', process.cwd())
+  .option('-P, --path [path]', 'Startup working directory [current directory]', process.cwd())
+  .option('-v, --verbose', 'Enable verbose logging')
   .parse(process.argv);
+
+logger.level = options.verbose ? 'verbose' : 'info';
 
 var app = express();
 
 app.use(express.static('public'));
 
 var server = app.listen(options.port, function () {
-  var host = server.address().address;
-  var port = server.address().port;
-
-  console.log('BroShell listening at http://%s:%s', host, port);
+  logger.info('BroShell listening on port ' + options.port);
 });
 
 var shasum = crypto.createHash('sha1');
@@ -46,7 +47,7 @@ var resetHistoryIndex = ' HISTINDEX=0;';
 var io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
-  console.log('connection');
+  logger.info('Connection from ' + socket.request.connection.remoteAddress);
 
   var bash = spawn(options.bin, [], {
     uid: +options.uid,
@@ -70,11 +71,11 @@ io.on('connection', function (socket) {
           cb = null;
         } else {
           var context = JSON.parse(line.replace(token, ''));
-          console.log('[context]', JSON.stringify(context));
+          logger.verbose('[context]', JSON.stringify(context));
           socket.emit('context', context);
         }
       } else {
-        console.log('[stdout]', line);
+        logger.info('[stdout]', line);
 
         if (typeof cb === 'function') {
           cb(line);
@@ -87,7 +88,7 @@ io.on('connection', function (socket) {
 
   bash.stderr.on('data', function (data) {
     data.toString().replace(/(\n)*$/, '').split('\n').forEach(function (line) {
-      console.log('[stderr]', line);
+      logger.info('[stderr]', line);
       socket.emit('stderr', line);
     });
   });
@@ -99,22 +100,22 @@ io.on('connection', function (socket) {
   });
 
   bash.on('close', function (code) {
-    console.log('[close]', code);
+    logger.info('[close]', code);
     socket.emit('close', code);
   });
 
   socket.on('cmd', function (cmd) {
-    console.log('[cmd]', cmd.replace(/(\n)*$/, ''));
+    logger.info('[cmd]', cmd.replace(/(\n)*$/, ''));
     bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + resetHistoryIndex + boundary);
   });
 
   socket.on('interrupt', function () {
-    console.log('[interrupt]');
+    logger.info('[interrupt]');
     spawn('pkill', ['-P', bash.pid]);
   });
 
   socket.on('history', function (direction, callback) {
-    console.log('[history]', direction);
+    logger.verbose('[history]', direction);
     cb = callback;
 
     if (direction < 0) {
@@ -128,6 +129,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
+    logger.info('Disconnection from ' + socket.request.connection.remoteAddress);
     bash.stdin.write(' history -a\n');
   });
 

@@ -46,4 +46,5 @@ Therefore, broshell is based on another solution: spawn a native shell and trans
 | `-H`  | `--history` | `~/.broshell_history` | Path to history save file            |
 | `-u`  | `--uid`     | `node process uid`    | User identity of the bash process    |
 | `-g`  | `--gid`     | `node process gid`    | Group identity of the bash process   |
-| `-p`  | `--path`    | `current directory`   | Startup working directory            |
+| `-P`  | `--path`    | `current directory`   | Startup working directory            |
+| `-v`  | `--verbose` |                       | Enable verbose logging               |
