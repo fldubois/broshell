@@ -3,12 +3,13 @@
 process.name = 'broshell';
 
 var crypto = require('crypto');
+var fs     = require('fs');
 var http   = require('http');
 var spawn  = require('child_process').spawn;
 
 var express = require('express');
 var options = require('commander');
-var logger  = require('winston');
+var winston  = require('winston');
 
 options.version(require('./package.json').version)
   .option('-p, --port [port]', 'Listening port for client connection [8080]', 8080)
@@ -20,7 +21,28 @@ options.version(require('./package.json').version)
   .option('-v, --verbose', 'Enable verbose logging')
   .parse(process.argv);
 
-logger.level = options.verbose ? 'verbose' : 'info';
+try {
+  fs.mkdirSync('logs');
+} catch (err) {
+  if (err.code !== 'EEXIST') {
+    throw err;
+  }
+}
+
+var logger = new winston.Logger({
+  transports: [
+    new winston.transports.Console({
+      level: options.verbose ? 'verbose' : 'info',
+      colorize: true,
+      timestamp: true
+    }),
+    new winston.transports.File({
+      filename: 'logs/broshell.log',
+      level: 'verbose',
+      timestamp: true
+    })
+  ]
+});
 
 var app = express();
 
