@@ -47,4 +47,5 @@ Therefore, broshell is based on another solution: spawn a native shell and trans
 | `-u`  | `--uid`     | `node process uid`    | User identity of the bash process    |
 | `-g`  | `--gid`     | `node process gid`    | Group identity of the bash process   |
 | `-P`  | `--path`    | `current directory`   | Startup working directory            |
+| `-l`  | `--logs`    | `/var/log/broshell`   | Logs directory                       |
 | `-v`  | `--verbose` |                       | Enable verbose logging               |

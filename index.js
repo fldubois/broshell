@@ -5,11 +5,12 @@ process.name = 'broshell';
 var crypto = require('crypto');
 var fs     = require('fs');
 var http   = require('http');
+var path   = require('path');
 var spawn  = require('child_process').spawn;
 
 var express = require('express');
 var options = require('commander');
-var winston  = require('winston');
+var winston = require('winston');
 
 options.version(require('./package.json').version)
   .option('-p, --port [port]', 'Listening port for client connection [8080]', 8080)
@@ -18,11 +19,12 @@ options.version(require('./package.json').version)
   .option('-u, --uid [uid]', 'User identity of the bash process [node process uid]', process.getuid())
   .option('-g, --gid [gid]', 'Group identity of the bash process [node process gid]', process.getgid())
   .option('-P, --path [path]', 'Startup working directory [current directory]', process.cwd())
+  .option('-l, --logs [path]', 'Logs directory [current directory]', '/var/log/broshell')
   .option('-v, --verbose', 'Enable verbose logging')
   .parse(process.argv);
 
 try {
-  fs.mkdirSync('logs');
+  fs.mkdirSync(options.logs);
 } catch (err) {
   if (err.code !== 'EEXIST') {
     throw err;
@@ -37,7 +39,7 @@ var logger = new winston.Logger({
       timestamp: true
     }),
     new winston.transports.File({
-      filename: 'logs/broshell.log',
+      filename: path.join(options.logs, 'broshell.log'),
       level: 'verbose',
       timestamp: true
     })
@@ -49,7 +51,7 @@ var app = express();
 app.use(express.static('public'));
 
 var server = app.listen(options.port, function () {
-  logger.info('BroShell listening on port ' + options.port);
+  logger.info('Broshell listening on port ' + options.port);
 });
 
 var shasum = crypto.createHash('sha1');
