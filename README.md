@@ -49,3 +49,7 @@ Therefore, broshell is based on another solution: spawn a native shell and trans
 | `-P`  | `--path`    | `current directory`   | Startup working directory            |
 | `-l`  | `--logs`    | `/var/log/broshell`   | Logs directory                       |
 | `-v`  | `--verbose` |                       | Enable verbose logging               |
+
+## License
+
+See [License](LICENSE)
