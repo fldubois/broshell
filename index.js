@@ -66,12 +66,24 @@ var boundary = ' echo "' + token + JSON.stringify({
 
 var resetHistoryIndex = ' HISTINDEX=0;';
 
+/**
+ * Generate a 4 characters short ID
+ * @see http://stackoverflow.com/a/6248722
+ *
+ * @return A 4 characters short ID (String)
+ */
+function generateShortID() {
+    return ('0000' + (Math.random() * Math.pow(36,4) << 0).toString(36)).slice(-4)
+}
+
 // Socket.io server
 
 var io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
-  logger.info('Connection from ' + socket.request.connection.remoteAddress);
+  var session = generateShortID();
+
+  logger.info('Connection from ' + socket.request.connection.remoteAddress, {session: session});
 
   var bash = spawn(options.bin, [], {
     uid: +options.uid,
@@ -95,11 +107,11 @@ io.on('connection', function (socket) {
           cb = null;
         } else {
           var context = JSON.parse(line.replace(token, ''));
-          logger.verbose('[context]', JSON.stringify(context));
+          logger.verbose('[context]', JSON.stringify(context), {session: session});
           socket.emit('context', context);
         }
       } else {
-        logger.info('[stdout]', line);
+        logger.info('[stdout]', line, {session: session});
 
         if (typeof cb === 'function') {
           cb(line);
@@ -112,7 +124,7 @@ io.on('connection', function (socket) {
 
   bash.stderr.on('data', function (data) {
     data.toString().replace(/(\n)*$/, '').split('\n').forEach(function (line) {
-      logger.info('[stderr]', line);
+      logger.info('[stderr]', line, {session: session});
       socket.emit('stderr', line);
     });
   });
@@ -124,22 +136,22 @@ io.on('connection', function (socket) {
   });
 
   bash.on('close', function (code) {
-    logger.info('[close]', code);
+    logger.info('[close]', code, {session: session});
     socket.emit('close', code);
   });
 
   socket.on('cmd', function (cmd) {
-    logger.info('[cmd]', cmd.replace(/(\n)*$/, ''));
+    logger.info('[cmd]', cmd.replace(/(\n)*$/, ''), {session: session});
     bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + resetHistoryIndex + boundary);
   });
 
   socket.on('interrupt', function () {
-    logger.info('[interrupt]');
+    logger.info('[interrupt]', {session: session});
     spawn('pkill', ['-P', bash.pid]);
   });
 
   socket.on('history', function (direction, callback) {
-    logger.verbose('[history]', direction);
+    logger.verbose('[history]', direction, {session: session});
     cb = callback;
 
     if (direction < 0) {
@@ -153,7 +165,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
-    logger.info('Disconnection from ' + socket.request.connection.remoteAddress);
+    logger.info('Disconnection from ' + socket.request.connection.remoteAddress, {session: session});
     bash.stdin.write(' history -a\n');
   });
 
