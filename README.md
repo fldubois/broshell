@@ -50,6 +50,17 @@ Therefore, broshell is based on another solution: spawn a native shell and trans
 | `-l`  | `--logs`    | `/var/log/broshell`   | Logs directory                       |
 | `-v`  | `--verbose` |                       | Enable verbose logging               |
 
+## TODO
+
+* Custom Winston formatter
+* 1 log file per session
+* Split front (html, css, js)
+* Split back (modules bash, configuration)
+* User management
+* Tab support (front)
+* Theme support (front)
+* Bash alternatives (zsh, powsershell, ...)
+
 ## License
 
 See [License](LICENSE)
