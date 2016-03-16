@@ -125,8 +125,18 @@
       window.scrollTo(0, document.body.scrollHeight);
     });
 
-    socket.on('exit', function (code) {
-      console.log('exit', code);
+    socket.on('close', function (code) {
+      console.log('close', code);
+
+      var div = document.createElement('div');
+      div.classList.add('line');
+      div.classList.add('error');
+      div.innerHTML = 'Process exited with code ' + code;
+
+      output.appendChild(div);
+
+      // Scroll to bottom
+      window.scrollTo(0, document.body.scrollHeight);
     });
 
     document.body.addEventListener('keypress', function (event) {

@@ -166,7 +166,10 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function () {
     logger.info('Disconnection from ' + socket.request.connection.remoteAddress, {session: session});
-    bash.stdin.write(' history -a\n');
+
+    if (bash.connected) {
+      bash.stdin.write(' history -a\n');
+    }
   });
 
   bash.stdin.write(boundary);
