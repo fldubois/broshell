@@ -52,14 +52,14 @@ Therefore, broshell is based on another solution: spawn a native shell and trans
 
 ## TODO
 
-* Custom Winston formatter
-* 1 log file per session
+* Log message on Broshell close
 * Split front (html, css, js)
 * Split back (modules bash, configuration)
 * User management
 * Tab support (front)
 * Theme support (front)
 * Bash alternatives (zsh, powsershell, ...)
+* Autocompletion
 
 ## License
 

@@ -31,46 +31,47 @@ try {
   }
 }
 
-var logger = new winston.Logger({
-  transports: [
-    new winston.transports.Console({
-      level: options.verbose ? 'verbose' : 'info',
-      colorize: true,
-      timestamp: true,
-      formatter: function(options) {
-        var timestampFn = function () {
-          return new Date().toISOString();
-        }
-
-        if (typeof options.timestamp === 'function') {
-          timestampFn = options.timestamp;
-        }
-
-        var timestamp = options.timestamp ? timestampFn() + ' - ' : '';
-        var level     = (options.colorize ? winston.config.colorize(options.level) : options.level) + ' ';
-        var session   = '';
-        var message   = options.message;
-        var meta      = '';
-
-        if (options.meta.session) {
-          session = '{' + options.meta.session + '} ';
-          delete options.meta.session;
-        }
-
-        if (Object.keys(options.meta).length > 0) {
-          meta = '\n\t' + JSON.stringify(options.meta);
-        }
-
-        return timestamp + level + session + message + meta;
+var transports = [
+  new winston.transports.Console({
+    level: options.verbose ? 'verbose' : 'info',
+    colorize: true,
+    timestamp: true,
+    formatter: function(options) {
+      var timestampFn = function () {
+        return new Date().toISOString();
       }
-    }),
-    new winston.transports.File({
-      filename: path.join(options.logs, 'broshell.log'),
-      level: 'verbose',
-      timestamp: true
-    })
-  ]
-});
+
+      if (typeof options.timestamp === 'function') {
+        timestampFn = options.timestamp;
+      }
+
+      var timestamp = options.timestamp ? timestampFn() + ' - ' : '';
+      var level     = (options.colorize ? winston.config.colorize(options.level) : options.level) + ' ';
+      var session   = '';
+      var message   = options.message;
+      var meta      = '';
+
+      if (options.meta.session) {
+        session = '{' + options.meta.session + '} ';
+        delete options.meta.session;
+      }
+
+      if (Object.keys(options.meta).length > 0) {
+        meta = '\n\t' + JSON.stringify(options.meta);
+      }
+
+      return timestamp + level + session + message + meta;
+    }
+  }),
+  new winston.transports.File({
+    name: 'global',
+    filename: path.join(options.logs, 'broshell.log'),
+    level: 'verbose',
+    timestamp: true
+  })
+];
+
+var logger = new winston.Logger({transports: transports});
 
 var app = express();
 
@@ -109,7 +110,18 @@ var io = require('socket.io')(server);
 io.on('connection', function (socket) {
   var session = generateShortID();
 
-  logger.info('Connection from ' + socket.request.connection.remoteAddress, {session: session});
+  var sessionLogger = new winston.Logger({
+    transports: transports.concat([
+      new winston.transports.File({
+        name: 'session',
+        filename: path.join(options.logs, 'broshell-' + new Date().toISOString() + '-' + session + '.log'),
+        level: 'verbose',
+        timestamp: true
+      })
+    ])
+  });
+
+  sessionLogger.info('Connection from ' + socket.request.connection.remoteAddress, {session: session});
 
   var bash = spawn(options.bin, [], {
     uid: +options.uid,
@@ -133,11 +145,11 @@ io.on('connection', function (socket) {
           cb = null;
         } else {
           var context = JSON.parse(line.replace(token, ''));
-          logger.verbose('[context]', JSON.stringify(context), {session: session});
+          sessionLogger.verbose('[context]', JSON.stringify(context), {session: session});
           socket.emit('context', context);
         }
       } else {
-        logger.info('[stdout]', line, {session: session});
+        sessionLogger.info('[stdout]', line, {session: session});
 
         if (typeof cb === 'function') {
           cb(line);
@@ -150,7 +162,7 @@ io.on('connection', function (socket) {
 
   bash.stderr.on('data', function (data) {
     data.toString().replace(/(\n)*$/, '').split('\n').forEach(function (line) {
-      logger.info('[stderr]', line, {session: session});
+      sessionLogger.info('[stderr]', line, {session: session});
       socket.emit('stderr', line);
     });
   });
@@ -162,22 +174,22 @@ io.on('connection', function (socket) {
   });
 
   bash.on('close', function (code) {
-    logger.info('[close]', code, {session: session});
+    sessionLogger.info('[close]', code, {session: session});
     socket.emit('close', code);
   });
 
   socket.on('cmd', function (cmd) {
-    logger.info('[cmd]', cmd.replace(/(\n)*$/, ''), {session: session});
+    sessionLogger.info('[cmd]', cmd.replace(/(\n)*$/, ''), {session: session});
     bash.stdin.write(cmd.replace(/(\n)*$/, '\n') + resetHistoryIndex + boundary);
   });
 
   socket.on('interrupt', function () {
-    logger.info('[interrupt]', {session: session});
+    sessionLogger.info('[interrupt]', {session: session});
     spawn('pkill', ['-P', bash.pid]);
   });
 
   socket.on('history', function (direction, callback) {
-    logger.verbose('[history]', direction, {session: session});
+    sessionLogger.verbose('[history]', direction, {session: session});
     cb = callback;
 
     if (direction < 0) {
@@ -191,7 +203,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
-    logger.info('Disconnection from ' + socket.request.connection.remoteAddress, {session: session});
+    sessionLogger.info('Disconnection from ' + socket.request.connection.remoteAddress, {session: session});
 
     if (bash.connected) {
       bash.stdin.write(' history -a\n');
