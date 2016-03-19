@@ -52,7 +52,6 @@ Therefore, broshell is based on another solution: spawn a native shell and trans
 
 ## TODO
 
-* Log message on Broshell close
 * Split front (html, css, js)
 * Split back (modules bash, configuration)
 * User management

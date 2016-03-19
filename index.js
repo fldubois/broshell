@@ -212,3 +212,17 @@ io.on('connection', function (socket) {
 
   bash.stdin.write(boundary);
 });
+
+process.on('exit', function (code) {
+  logger.info('Exiting with code : ' + code);
+});
+
+process.on('SIGINT', function (err) {
+  logger.info('SIGINT signal received');
+  process.exit(2);
+});
+
+process.on('uncaughtException', function (err) {
+  logger.error(err.stack ? err.stack : 'Uncaught Exception : ' + err.message);
+  process.exit(3);
+});
