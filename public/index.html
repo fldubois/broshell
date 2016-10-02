@@ -1,51 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title></title>
+    <title>BroShell</title>
   </head>
-  <style>
-
-  @keyframes blink {
-    0%   { color: inherit;       }
-    49%  { color: inherit;       }
-    50%  { color: rgba(0,0,0,0); }
-    100% { color: rgba(0,0,0,0); }
-  }
-
-  html, body {
-    width: 100%;
-    margin: 0 3px;
-    background-color: rgb(39, 40, 34);
-    color: rgb(248, 248, 242);
-    font-family: 'Consolas';
-  }
-
-  .user         { color: rgb(138, 222, 53); }
-  .cwd, .symbol { color: rgb(52, 226, 213); }
-
-  .line {
-    white-space: pre;
-  }
-
-  .line.error {
-    color: rgb(231, 76, 60);
-  }
-
-  .hidden {
-    display: none;
-  }
-
-  #cmd-left, #cmd-right {
-    white-space: pre;
-  }
-
-  .cursor {
-    position: absolute;
-    animation-duration: 1s;
-    animation-name: blink;
-    animation-iteration-count: infinite;
-  }
-  </style>
+  <link rel="stylesheet" type="text/css" href="styles/index.css">
 <body>
   <div id="output"></div>
   <div id="input" class="line hidden">
