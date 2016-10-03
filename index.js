@@ -12,6 +12,8 @@ var express = require('express');
 var options = require('commander');
 var winston = require('winston');
 
+var config = require('./lib/config.js');
+
 options.version(require('./package.json').version)
   .option('-p, --port [port]', 'Listening port for client connection [8080]', 8080)
   .option('-x, --bin [path]', 'Path to native shell binaries [/bin/bash]', '/bin/bash')
@@ -23,8 +25,10 @@ options.version(require('./package.json').version)
   .option('-v, --verbose', 'Enable verbose logging')
   .parse(process.argv);
 
+config.set(options);
+
 try {
-  fs.mkdirSync(options.logs);
+  fs.mkdirSync(config.get('logs'));
 } catch (err) {
   if (err.code !== 'EEXIST') {
     throw err;
@@ -33,7 +37,7 @@ try {
 
 var transports = [
   new winston.transports.Console({
-    level: options.verbose ? 'verbose' : 'info',
+    level: config.get('verbose') ? 'verbose' : 'info',
     colorize: true,
     timestamp: true,
     formatter: function(options) {
@@ -65,7 +69,7 @@ var transports = [
   }),
   new winston.transports.File({
     name: 'global',
-    filename: path.join(options.logs, 'broshell.log'),
+    filename: path.join(config.get('logs'), 'broshell.log'),
     level: 'verbose',
     timestamp: true
   })
@@ -77,8 +81,8 @@ var app = express();
 
 app.use(express.static('public'));
 
-var server = app.listen(options.port, function () {
-  logger.info('Broshell listening on port ' + options.port);
+var server = app.listen(config.get('port'), function () {
+  logger.info('Broshell listening on port ' + config.get('port'));
 });
 
 var shasum = crypto.createHash('sha1');
@@ -114,7 +118,7 @@ io.on('connection', function (socket) {
     transports: transports.concat([
       new winston.transports.File({
         name: 'session',
-        filename: path.join(options.logs, 'broshell-' + new Date().toISOString() + '-' + session + '.log'),
+        filename: path.join(config.get('logs'), 'broshell-' + new Date().toISOString() + '-' + session + '.log'),
         level: 'verbose',
         timestamp: true
       })
@@ -123,12 +127,12 @@ io.on('connection', function (socket) {
 
   sessionLogger.info('Connection from ' + socket.request.connection.remoteAddress, {session: session});
 
-  var bash = spawn(options.bin, [], {
-    uid: +options.uid,
-    gid: +options.gid,
-    cwd: options.path,
+  var bash = spawn(config.get('bin'), [], {
+    uid: +config.get('uid'),
+    gid: +config.get('gid'),
+    cwd: config.get('path'),
     env: {
-      HISTFILE: options.history,
+      HISTFILE: config.get('history'),
       HISTFILESIZE: 500,
       HISTSIZE: 500,
       HISTCONTROL: 'ignorespace',
