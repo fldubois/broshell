@@ -3,12 +3,12 @@
 process.name = 'broshell';
 
 var crypto = require('crypto');
-var fs     = require('fs');
 var http   = require('http');
 var path   = require('path');
 var spawn  = require('child_process').spawn;
 
 var express = require('express');
+var mkdirp  = require('mkdirp');
 var options = require('commander');
 var winston = require('winston');
 
@@ -21,14 +21,14 @@ options.version(require('./package.json').version)
   .option('-u, --uid [uid]', 'User identity of the bash process [node process uid]', process.getuid())
   .option('-g, --gid [gid]', 'Group identity of the bash process [node process gid]', process.getgid())
   .option('-P, --path [path]', 'Startup working directory [current directory]', process.cwd())
-  .option('-l, --logs [path]', 'Logs directory [current directory]', '/var/log/broshell')
+  .option('-l, --logs [path]', 'Logs directory [/var/log/broshell]', '/var/log/broshell')
   .option('-v, --verbose', 'Enable verbose logging')
   .parse(process.argv);
 
 config.set(options);
 
 try {
-  fs.mkdirSync(config.get('logs'));
+  mkdirp.sync(config.get('logs'));
 } catch (err) {
   if (err.code !== 'EEXIST') {
     throw err;
