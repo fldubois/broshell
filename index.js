@@ -3,20 +3,11 @@
 process.name = 'broshell';
 
 var express = require('express');
-var mkdirp  = require('mkdirp');
 
 var config = require('./lib/config.js');
 var logger = require('./lib/logger.js');
 
 var Bash = require('./lib/bash.js');
-
-try {
-  mkdirp.sync(config.get('logs'));
-} catch (err) {
-  if (err.code !== 'EEXIST') {
-    throw err;
-  }
-}
 
 var app = express();
 
